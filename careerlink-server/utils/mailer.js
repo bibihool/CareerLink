@@ -3,13 +3,21 @@ const nodemailer = require("nodemailer");
 function getTransporter() {
     const user = process.env.GMAIL_USER;
     const pass = process.env.GMAIL_APP_PASSWORD;
+    const host = process.env.SMTP_HOST || "smtp.gmail.com";
+    const port = Number(process.env.SMTP_PORT || 587);
 
     if (!user || !pass) {
         throw new Error("Gmail SMTP is not configured");
     }
 
     return nodemailer.createTransport({
-        service: "gmail",
+        host,
+        port,
+        secure: port === 465,
+        family: 4,
+        connectionTimeout: 20000,
+        greetingTimeout: 20000,
+        socketTimeout: 30000,
         auth: { user, pass },
     });
 }
