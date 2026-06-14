@@ -12,8 +12,21 @@ const applicationRoutes = require("./routes/applicationRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 
 const app = express();
+const port = process.env.PORT || 5000;
+const allowedOrigins = (process.env.CLIENT_ORIGIN || "http://localhost:5173,http://127.0.0.1:5173")
+    .split(",")
+    .map((origin) => origin.trim());
 
-app.use(cors());
+app.use(cors({
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+            return;
+        }
+
+        callback(new Error("Not allowed by CORS"));
+    },
+}));
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
@@ -42,6 +55,6 @@ app.get("/", (req, res) => {
     res.send("CareerLink API Running");
 });
 
-app.listen(5000, () => {
-    console.log("Server running on port 5000");
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
 });

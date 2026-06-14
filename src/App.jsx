@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
-const API_BASE = 'http://localhost:5000/api'
-const FILE_BASE = 'http://localhost:5000/uploads'
+const SERVER_BASE = import.meta.env.VITE_SERVER_BASE || 'http://localhost:5000'
+const API_BASE = `${SERVER_BASE}/api`
+const FILE_BASE = `${SERVER_BASE}/uploads`
 const employmentTypes = ['Full-time', 'Part-time', 'Contract', 'Internship']
 const applicationStatuses = ['Submitted', 'Under Review', 'Interview', 'Offered', 'Rejected']
 
