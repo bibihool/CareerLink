@@ -21,9 +21,19 @@ async function apiRequest(path, options = {}) {
   return data
 }
 
+function getStoredUser() {
+  if (typeof window === 'undefined') return null
+
+  try {
+    return JSON.parse(window.localStorage.getItem('careerlink_user'))
+  } catch {
+    return null
+  }
+}
+
 function App() {
-  const [activePage, setActivePage] = useState('login')
-  const [user, setUser] = useState(null)
+  const [activePage, setActivePage] = useState(() => (getStoredUser() ? 'dashboard' : 'login'))
+  const [user, setUser] = useState(() => getStoredUser())
   const [authForm, setAuthForm] = useState({
     name: '',
     email: '',
@@ -48,6 +58,8 @@ function App() {
   const [applications, setApplications] = useState([])
   const [notifications, setNotifications] = useState([])
   const [statusMessage, setStatusMessage] = useState('')
+  const [statusType, setStatusType] = useState('info')
+  const [isBusy, setIsBusy] = useState(false)
   const [verification, setVerification] = useState({
     email: '',
     code: '',
@@ -73,6 +85,8 @@ function App() {
     job: jobs.find((job) => job.id === application.jobId),
   }))
   const seekerApplications = trackedApplications.filter((application) => application.email === user?.email)
+  const visibleApplications = isEmployer ? trackedApplications : seekerApplications
+  const recommendedJobs = jobs.filter((job) => job.status === 'Open').slice(0, 2)
   const navigationItems = isEmployer
     ? [
         ['dashboard', 'Overview'],
@@ -102,14 +116,53 @@ function App() {
 
   useEffect(() => {
     loadJobs()
+    const storedUser = getStoredUser()
+    if (storedUser) {
+      refreshWorkspace(storedUser)
+    }
+    // This startup hydration should only run once when the app opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  function showStatus(message, type = 'error') {
+    setStatusMessage(message)
+    setStatusType(type)
+  }
+
+  function clearStatus() {
+    setStatusMessage('')
+  }
+
+  function rememberUser(nextUser) {
+    setUser(nextUser)
+    window.localStorage.setItem('careerlink_user', JSON.stringify(nextUser))
+  }
+
+  function forgetUser() {
+    window.localStorage.removeItem('careerlink_user')
+    setUser(null)
+  }
+
+  function hasApplied(jobId) {
+    return applications.some((application) => application.jobId === jobId && application.email === user?.email)
+  }
+
+  async function withBusy(action) {
+    if (isBusy) return
+    setIsBusy(true)
+    try {
+      await action()
+    } finally {
+      setIsBusy(false)
+    }
+  }
 
   async function loadJobs() {
     try {
       const data = await apiRequest('/jobs')
       setJobs(data)
     } catch (error) {
-      setStatusMessage(error.message)
+      showStatus(error.message)
     }
   }
 
@@ -118,7 +171,7 @@ function App() {
       const data = await apiRequest('/applications')
       setApplications(data)
     } catch (error) {
-      setStatusMessage(error.message)
+      showStatus(error.message)
     }
   }
 
@@ -127,7 +180,7 @@ function App() {
       const data = await apiRequest(`/notifications?userId=${userId}`)
       setNotifications(data)
     } catch (error) {
-      setStatusMessage(error.message)
+      showStatus(error.message)
     }
   }
 
@@ -141,7 +194,7 @@ function App() {
         setProfile(data)
       }
     } catch (error) {
-      setStatusMessage(error.message)
+      showStatus(error.message)
     }
   }
 
@@ -162,105 +215,147 @@ function App() {
         body: JSON.stringify({ userId, message }),
       })
     } catch (error) {
-      setStatusMessage(error.message)
+      showStatus(error.message)
     }
   }
 
   async function handleLogin(event) {
     event.preventDefault()
-    try {
-      const data = await apiRequest('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email: authForm.email, password: authForm.password }),
-      })
-      setUser(data.user)
-      await refreshWorkspace(data.user)
-      await addNotification(`${data.user.name} logged in as ${data.user.role}.`, data.user.id)
-      setActivePage('dashboard')
-      setStatusMessage('')
-    } catch (error) {
-      setStatusMessage(error.message)
+    if (!authForm.email.trim() || !authForm.password) {
+      showStatus('Please enter your email address and password.')
+      return
     }
+
+    await withBusy(async () => {
+      try {
+        const data = await apiRequest('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email: authForm.email.trim(), password: authForm.password }),
+        })
+        rememberUser(data.user)
+        await refreshWorkspace(data.user)
+        await addNotification(`${data.user.name} logged in as ${data.user.role}.`, data.user.id)
+        setActivePage('dashboard')
+        clearStatus()
+      } catch (error) {
+        showStatus(error.message)
+      }
+    })
   }
 
   async function handleRegister(event) {
     event.preventDefault()
+    if (!authForm.name.trim() || !authForm.email.trim() || !authForm.password || !authForm.confirmPassword) {
+      showStatus('Please complete all registration fields.')
+      return
+    }
+    if (authForm.password.length < 6) {
+      showStatus('Password must be at least 6 characters long.')
+      return
+    }
     if (authForm.password !== authForm.confirmPassword) {
-      setStatusMessage('Password and confirm password do not match')
+      showStatus('Password and confirm password do not match.')
       return
     }
 
-    try {
-      const data = await apiRequest('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(authForm),
-      })
-      setVerification((current) => ({ ...current, email: data.email || authForm.email, code: '' }))
-      setActivePage('verify-registration')
-      setStatusMessage('')
-    } catch (error) {
-      setStatusMessage(error.message)
-    }
+    await withBusy(async () => {
+      try {
+        const data = await apiRequest('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ ...authForm, email: authForm.email.trim(), name: authForm.name.trim() }),
+        })
+        setVerification((current) => ({ ...current, email: data.email || authForm.email.trim(), code: '' }))
+        setActivePage('verify-registration')
+        showStatus('Verification code sent. Please check your email.', 'success')
+      } catch (error) {
+        showStatus(error.message)
+      }
+    })
   }
 
   async function handleVerifyRegistration(event) {
     event.preventDefault()
-    try {
-      const data = await apiRequest('/auth/register/verify', {
-        method: 'POST',
-        body: JSON.stringify({ email: verification.email, code: verification.code }),
-      })
-      setUser(data.user)
-      await refreshWorkspace(data.user)
-      await addNotification(`Registration complete for ${data.user.name}.`, data.user.id)
-      setActivePage('dashboard')
-      setStatusMessage('')
-    } catch (error) {
-      setStatusMessage(error.message)
+    if (verification.code.length !== 6) {
+      showStatus('Please enter the 6-digit verification code.')
+      return
     }
+
+    await withBusy(async () => {
+      try {
+        const data = await apiRequest('/auth/register/verify', {
+          method: 'POST',
+          body: JSON.stringify({ email: verification.email, code: verification.code }),
+        })
+        rememberUser(data.user)
+        await refreshWorkspace(data.user)
+        await addNotification(`Registration complete for ${data.user.name}.`, data.user.id)
+        setActivePage('dashboard')
+        clearStatus()
+      } catch (error) {
+        showStatus(error.message)
+      }
+    })
   }
 
   async function handleSendPasswordCode(event) {
     event.preventDefault()
-    try {
-      const data = await apiRequest('/auth/password/send-code', {
-        method: 'POST',
-        body: JSON.stringify({ email: verification.email || authForm.email }),
-      })
-      setVerification((current) => ({ ...current, email: data.email || authForm.email, code: '' }))
-      setActivePage('reset-password')
-      setStatusMessage('')
-    } catch (error) {
-      setStatusMessage(error.message)
+    const email = (verification.email || authForm.email).trim()
+    if (!email) {
+      showStatus('Please enter your email address.')
+      return
     }
+
+    await withBusy(async () => {
+      try {
+        const data = await apiRequest('/auth/password/send-code', {
+          method: 'POST',
+          body: JSON.stringify({ email }),
+        })
+        setVerification((current) => ({ ...current, email: data.email || email, code: '' }))
+        setActivePage('reset-password')
+        showStatus('Recovery code sent. Please check your email.', 'success')
+      } catch (error) {
+        showStatus(error.message)
+      }
+    })
   }
 
   async function handleResetPassword(event) {
     event.preventDefault()
+    if (verification.code.length !== 6) {
+      showStatus('Please enter the 6-digit recovery code.')
+      return
+    }
+    if (verification.newPassword.length < 6) {
+      showStatus('New password must be at least 6 characters long.')
+      return
+    }
     if (verification.newPassword !== verification.confirmNewPassword) {
-      setStatusMessage('New password and confirm password do not match')
+      showStatus('New password and confirm password do not match.')
       return
     }
 
-    try {
-      await apiRequest('/auth/password/reset', {
-        method: 'POST',
-        body: JSON.stringify({
-          email: verification.email,
-          code: verification.code,
-          password: verification.newPassword,
-        }),
-      })
-      setStatusMessage('Password reset successful. Please login with your new password.')
-      setActivePage('login')
-    } catch (error) {
-      setStatusMessage(error.message)
-    }
+    await withBusy(async () => {
+      try {
+        await apiRequest('/auth/password/reset', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: verification.email,
+            code: verification.code,
+            password: verification.newPassword,
+          }),
+        })
+        showStatus('Password reset successful. Please login with your new password.', 'success')
+        setActivePage('login')
+      } catch (error) {
+        showStatus(error.message)
+      }
+    })
   }
 
   function handleLogout() {
     addNotification('You have logged out successfully.')
-    setUser(null)
+    forgetUser()
     setActivePage('login')
   }
 
@@ -272,9 +367,9 @@ function App() {
         body: JSON.stringify(profile),
       })
       await addNotification('Job seeker profile updated.')
-      setStatusMessage('')
+      showStatus('Profile saved successfully.', 'success')
     } catch (error) {
-      setStatusMessage(error.message)
+      showStatus(error.message)
     }
   }
 
@@ -286,9 +381,9 @@ function App() {
         body: JSON.stringify(company),
       })
       await addNotification('Employer profile updated.')
-      setStatusMessage('')
+      showStatus('Company profile saved successfully.', 'success')
     } catch (error) {
-      setStatusMessage(error.message)
+      showStatus(error.message)
     }
   }
 
@@ -303,7 +398,7 @@ function App() {
     const file = event.target.files?.[0]
     if (!file) return
     if (file.type !== 'application/pdf') {
-      addNotification('Resume upload requires a PDF file.')
+      showStatus('Resume upload requires a PDF file.')
       return
     }
 
@@ -317,21 +412,30 @@ function App() {
       })
       setProfile((current) => ({ ...current, resume: data.resume }))
       await addNotification(`Resume uploaded: ${file.name}.`)
-      setStatusMessage('')
+      showStatus('Resume uploaded successfully.', 'success')
     } catch (error) {
-      setStatusMessage(error.message)
+      showStatus(error.message)
     }
   }
 
   async function submitJob(event) {
     event.preventDefault()
+    if (!jobForm.title.trim() || !jobForm.location.trim() || !jobForm.description.trim()) {
+      showStatus('Please complete the job title, location, and description.')
+      return
+    }
+    if (!jobForm.salary || Number(jobForm.salary) <= 0) {
+      showStatus('Please enter a valid salary amount.')
+      return
+    }
+
     const payload = {
-      title: jobForm.title,
+      title: jobForm.title.trim(),
       company: company.name,
-      location: jobForm.location,
+      location: jobForm.location.trim(),
       salary: Number(jobForm.salary),
       type: jobForm.type,
-      description: jobForm.description,
+      description: jobForm.description.trim(),
       status: 'Open',
       employerId: user.id,
     }
@@ -355,9 +459,9 @@ function App() {
 
       setJobForm({ title: '', location: '', salary: '', type: 'Full-time', description: '' })
       setEditingJobId(null)
-      setStatusMessage('')
+      showStatus(editingJobId ? 'Job updated successfully.' : 'Job created successfully.', 'success')
     } catch (error) {
-      setStatusMessage(error.message)
+      showStatus(error.message)
     }
   }
 
@@ -380,9 +484,9 @@ function App() {
       setJobs((items) => items.filter((item) => item.id !== jobId))
       setApplications((items) => items.filter((item) => item.jobId !== jobId))
       await addNotification(`${job?.title || 'Job'} deleted.`)
-      setStatusMessage('')
+      showStatus('Job deleted successfully.', 'success')
     } catch (error) {
-      setStatusMessage(error.message)
+      showStatus(error.message)
     }
   }
 
@@ -391,14 +495,15 @@ function App() {
       await apiRequest(`/jobs/${jobId}/close`, { method: 'PATCH' })
       setJobs((items) => items.map((job) => (job.id === jobId ? { ...job, status: 'Closed' } : job)))
       await addNotification('Job posting closed.')
-      setStatusMessage('')
+      showStatus('Job posting closed.', 'success')
     } catch (error) {
-      setStatusMessage(error.message)
+      showStatus(error.message)
     }
   }
 
   async function applyForJob(job) {
     if (!user) {
+      showStatus('Please login before applying for jobs.')
       setActivePage('login')
       return
     }
@@ -407,7 +512,7 @@ function App() {
       (application) => application.jobId === job.id && application.email === user.email,
     )
     if (exists) {
-      addNotification(`You already applied for ${job.title}.`)
+      showStatus(`You already applied for ${job.title}.`, 'info')
       return
     }
 
@@ -423,9 +528,9 @@ function App() {
       })
       setApplications((items) => [application, ...items])
       await addNotification(`Application submitted for ${job.title}.`)
-      setStatusMessage('')
+      showStatus(`Application submitted for ${job.title}.`, 'success')
     } catch (error) {
-      setStatusMessage(error.message)
+      showStatus(error.message)
     }
   }
 
@@ -439,9 +544,9 @@ function App() {
         items.map((application) => (application.id === applicationId ? { ...application, status } : application)),
       )
       await addNotification(`Applicant status changed to ${status}.`)
-      setStatusMessage('')
+      showStatus(`Applicant status changed to ${status}.`, 'success')
     } catch (error) {
-      setStatusMessage(error.message)
+      showStatus(error.message)
     }
   }
 
@@ -471,7 +576,12 @@ function App() {
       )}
 
       <main className={!user ? 'auth-main' : ''}>
-        {statusMessage && <div className="system-message">{statusMessage}</div>}
+        {statusMessage && (
+          <div className={`system-message ${statusType}`} role="status">
+            <span>{statusMessage}</span>
+            <button type="button" onClick={clearStatus}>Dismiss</button>
+          </div>
+        )}
 
         {activePage === 'dashboard' && (
           <section className="page-grid dashboard-grid">
@@ -511,10 +621,13 @@ function App() {
                 <div className="panel">
                   <h3>Recommended roles</h3>
                   <div className="mini-list">
-                    {jobs.filter((job) => job.status === 'Open').slice(0, 2).map((job) => (
+                    {recommendedJobs.map((job) => (
                       <button key={job.id} onClick={() => setActivePage('search')}>{job.title} - {job.location}</button>
                     ))}
                   </div>
+                  {recommendedJobs.length === 0 && (
+                    <EmptyState title="No open jobs yet" message="New roles will appear here once employers publish them." />
+                  )}
                 </div>
               </>
             )}
@@ -545,6 +658,7 @@ function App() {
           <LoginPage
             authForm={authForm}
             setAuthForm={setAuthForm}
+            isBusy={isBusy}
             onSubmit={handleLogin}
             onRegister={() => setActivePage('register')}
             onForgotPassword={() => setActivePage('forgot-password')}
@@ -555,6 +669,7 @@ function App() {
           <PasswordRecoveryPage
             email={verification.email || authForm.email}
             setEmail={(email) => setVerification({ ...verification, email })}
+            isBusy={isBusy}
             onSubmit={handleSendPasswordCode}
             onBack={() => setActivePage('login')}
           />
@@ -566,6 +681,7 @@ function App() {
             message={`We sent a 6-digit code to ${verification.email}. Enter it below to create your account.`}
             code={verification.code}
             setCode={(code) => setVerification({ ...verification, code })}
+            isBusy={isBusy}
             onSubmit={handleVerifyRegistration}
             primaryLabel="Verify account"
             secondaryLabel="Back to registration"
@@ -577,6 +693,7 @@ function App() {
           <ResetPasswordPage
             verification={verification}
             setVerification={setVerification}
+            isBusy={isBusy}
             onSubmit={handleResetPassword}
             onBack={() => setActivePage('forgot-password')}
           />
@@ -586,6 +703,7 @@ function App() {
           <RegistrationPage
             authForm={authForm}
             setAuthForm={setAuthForm}
+            isBusy={isBusy}
             onSubmit={handleRegister}
             onLogin={() => setActivePage('login')}
           />
@@ -666,7 +784,7 @@ function App() {
             <div className="panel wide">
               <h2>Job management</h2>
               <div className="job-list">
-                {jobs.map((job) => (
+                {jobs.length > 0 ? jobs.map((job) => (
                   <JobCard
                     job={job}
                     key={job.id}
@@ -678,7 +796,9 @@ function App() {
                       </>
                     }
                   />
-                ))}
+                )) : (
+                  <EmptyState title="No jobs posted yet" message="Create your first job post to start receiving applications." />
+                )}
               </div>
             </div>
           </section>
@@ -695,11 +815,28 @@ function App() {
                 <option value="">All employment types</option>
                 {employmentTypes.map((type) => <option key={type}>{type}</option>)}
               </select>
+              <button
+                className="subtle-button"
+                type="button"
+                onClick={() => setFilters({ keyword: '', location: '', salary: '', type: '' })}
+              >
+                Clear filters
+              </button>
             </div>
             <div className="job-list">
-              {filteredJobs.map((job) => (
-                <JobCard job={job} key={job.id} actions={<button disabled={job.status === 'Closed'} onClick={() => applyForJob(job)}>Apply</button>} />
-              ))}
+              {filteredJobs.length > 0 ? filteredJobs.map((job) => (
+                <JobCard
+                  job={job}
+                  key={job.id}
+                  actions={
+                    <button disabled={job.status === 'Closed' || hasApplied(job.id)} onClick={() => applyForJob(job)}>
+                      {hasApplied(job.id) ? 'Applied' : 'Apply'}
+                    </button>
+                  }
+                />
+              )) : (
+                <EmptyState title="No matching jobs" message="Try removing a filter or searching for a broader keyword." />
+              )}
             </div>
           </section>
         )}
@@ -708,6 +845,7 @@ function App() {
           <section className="page-grid">
             <div className="panel wide">
               <h2>{isEmployer ? 'Applicant tracking' : 'My applications'}</h2>
+              {visibleApplications.length > 0 ? (
               <div className="table-wrap">
                 <table>
                   <thead>
@@ -720,7 +858,7 @@ function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(isEmployer ? trackedApplications : seekerApplications).map((application) => (
+                    {visibleApplications.map((application) => (
                       <tr key={application.id}>
                         <td>
                           <strong>{application.applicant}</strong>
@@ -757,6 +895,12 @@ function App() {
                   </tbody>
                 </table>
               </div>
+              ) : (
+                <EmptyState
+                  title={isEmployer ? 'No applicants yet' : 'No applications yet'}
+                  message={isEmployer ? 'Applications will appear here when candidates apply.' : 'Apply for a role and track its progress here.'}
+                />
+              )}
             </div>
           </section>
         )}
@@ -766,12 +910,14 @@ function App() {
             <div className="panel wide">
               <h2>Notifications</h2>
               <div className="notification-list">
-                {notifications.map((notification, index) => (
+                {notifications.length > 0 ? notifications.map((notification, index) => (
                   <div className="notification" key={`${notification}-${index}`}>
                     <span>{index + 1}</span>
                     <p>{notification}</p>
                   </div>
-                ))}
+                )) : (
+                  <EmptyState title="No notifications" message="Important account and application updates will appear here." />
+                )}
               </div>
             </div>
           </section>
@@ -781,7 +927,7 @@ function App() {
   )
 }
 
-function LoginPage({ authForm, setAuthForm, onSubmit, onRegister, onForgotPassword }) {
+function LoginPage({ authForm, setAuthForm, isBusy, onSubmit, onRegister, onForgotPassword }) {
   return (
     <section className="login-page">
       <div className="login-logo" aria-label="CareerLink logo">
@@ -812,8 +958,8 @@ function LoginPage({ authForm, setAuthForm, onSubmit, onRegister, onForgotPasswo
             onChange={(event) => setAuthForm({ ...authForm, password: event.target.value })}
           />
         </div>
-        <button className="login-submit" type="submit">
-          Login
+        <button className="login-submit" disabled={isBusy} type="submit">
+          {isBusy ? 'Logging in...' : 'Login'}
         </button>
         <div className="login-secondary-actions">
           <button type="button" onClick={onRegister}>
@@ -828,7 +974,7 @@ function LoginPage({ authForm, setAuthForm, onSubmit, onRegister, onForgotPasswo
   )
 }
 
-function PasswordRecoveryPage({ email, setEmail, onSubmit, onBack }) {
+function PasswordRecoveryPage({ email, setEmail, isBusy, onSubmit, onBack }) {
   return (
     <section className="login-page">
       <div className="login-logo" aria-label="CareerLink logo">
@@ -848,8 +994,8 @@ function PasswordRecoveryPage({ email, setEmail, onSubmit, onBack }) {
             onChange={(event) => setEmail(event.target.value)}
           />
         </div>
-        <button className="login-submit" type="submit">
-          Send code
+        <button className="login-submit" disabled={isBusy} type="submit">
+          {isBusy ? 'Sending...' : 'Send code'}
         </button>
         <div className="login-secondary-actions single-action">
           <button type="button" onClick={onBack}>
@@ -866,6 +1012,7 @@ function OtpVerificationPage({
   message,
   code,
   setCode,
+  isBusy,
   onSubmit,
   primaryLabel,
   secondaryLabel,
@@ -891,8 +1038,8 @@ function OtpVerificationPage({
             onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
           />
         </div>
-        <button className="login-submit" type="submit">
-          {primaryLabel}
+        <button className="login-submit" disabled={isBusy} type="submit">
+          {isBusy ? 'Checking...' : primaryLabel}
         </button>
         <div className="login-secondary-actions single-action">
           <button type="button" onClick={onSecondary}>
@@ -904,7 +1051,7 @@ function OtpVerificationPage({
   )
 }
 
-function ResetPasswordPage({ verification, setVerification, onSubmit, onBack }) {
+function ResetPasswordPage({ verification, setVerification, isBusy, onSubmit, onBack }) {
   return (
     <section className="login-page">
       <div className="login-logo" aria-label="CareerLink logo">
@@ -949,8 +1096,8 @@ function ResetPasswordPage({ verification, setVerification, onSubmit, onBack }) 
             onChange={(event) => setVerification({ ...verification, confirmNewPassword: event.target.value })}
           />
         </div>
-        <button className="login-submit" type="submit">
-          Reset password
+        <button className="login-submit" disabled={isBusy} type="submit">
+          {isBusy ? 'Resetting...' : 'Reset password'}
         </button>
         <div className="login-secondary-actions single-action">
           <button type="button" onClick={onBack}>
@@ -962,7 +1109,7 @@ function ResetPasswordPage({ verification, setVerification, onSubmit, onBack }) 
   )
 }
 
-function RegistrationPage({ authForm, setAuthForm, onSubmit, onLogin }) {
+function RegistrationPage({ authForm, setAuthForm, isBusy, onSubmit, onLogin }) {
   return (
     <section className="login-page registration-page">
       <div className="login-logo" aria-label="CareerLink logo">
@@ -1003,6 +1150,7 @@ function RegistrationPage({ authForm, setAuthForm, onSubmit, onLogin }) {
             value={authForm.password}
             onChange={(event) => setAuthForm({ ...authForm, password: event.target.value })}
           />
+          <small>Use at least 6 characters.</small>
         </div>
         <div className="form-field">
           <label htmlFor="register-confirm-password">Confirm password</label>
@@ -1027,8 +1175,8 @@ function RegistrationPage({ authForm, setAuthForm, onSubmit, onLogin }) {
             <option>Admin</option>
           </select>
         </div>
-        <button className="login-submit" type="submit">
-          Register
+        <button className="login-submit" disabled={isBusy} type="submit">
+          {isBusy ? 'Sending code...' : 'Register'}
         </button>
         <div className="login-secondary-actions single-action">
           <button type="button" onClick={onLogin}>
@@ -1053,11 +1201,24 @@ function ProfileBuilder({ title, type, items, quickAdd, setQuickAdd, onAdd }) {
   return (
     <div className="panel">
       <h3>{title}</h3>
-      <div className="tag-row">{items.map((item) => <span key={item}>{item}</span>)}</div>
+      <div className="tag-row">
+        {items.length > 0 ? items.map((item) => <span key={item}>{item}</span>) : (
+          <span className="muted-tag">Add your first {title.toLowerCase()} item</span>
+        )}
+      </div>
       <div className="inline-add">
         <input value={quickAdd[type]} onChange={(event) => setQuickAdd({ ...quickAdd, [type]: event.target.value })} placeholder={`Add ${title.toLowerCase()}`} />
-        <button onClick={() => onAdd(type)}>Add</button>
+        <button type="button" onClick={() => onAdd(type)}>Add</button>
       </div>
+    </div>
+  )
+}
+
+function EmptyState({ title, message }) {
+  return (
+    <div className="empty-state">
+      <strong>{title}</strong>
+      <p>{message}</p>
     </div>
   )
 }
