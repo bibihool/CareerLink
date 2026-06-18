@@ -30,7 +30,7 @@ export default function AppLayout({ user, status, isLoading, onDismissStatus, on
     <div className="app-shell">
       <header className="topbar">
         <div className="brand-lockup">
-          <span className="brand-icon"><BriefcaseBusiness aria-hidden="true" size={22} /></span>
+          <img className="brand-logo" src="/logo.png" alt="CareerLink" />
           <div>
           <p className="eyebrow">CareerLink Malaysia</p>
           <h1>CareerLink</h1>

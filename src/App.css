@@ -35,14 +35,13 @@
   gap: 12px;
 }
 
-.brand-icon {
+.brand-logo {
   background: #eef4ff;
   border: 1px solid #d8e5ff;
   border-radius: 8px;
-  color: #2f6fed;
-  display: grid;
   height: 42px;
-  place-items: center;
+  object-fit: contain;
+  padding: 4px;
   width: 42px;
 }
 
@@ -190,6 +189,16 @@ main.auth-main {
   justify-content: center;
   letter-spacing: 0;
   width: 190px;
+}
+
+.login-logo img {
+  height: 50px;
+  object-fit: contain;
+  width: 42px;
+}
+
+.login-logo span {
+  margin-left: 9px;
 }
 
 .login-card {
