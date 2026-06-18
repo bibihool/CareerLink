@@ -23,6 +23,29 @@
   margin: 0;
 }
 
+.brand-lockup,
+.user-pill button,
+.nav-tabs a,
+.resume-link {
+  align-items: center;
+  display: inline-flex;
+}
+
+.brand-lockup {
+  gap: 12px;
+}
+
+.brand-icon {
+  background: #eef4ff;
+  border: 1px solid #d8e5ff;
+  border-radius: 8px;
+  color: #2f6fed;
+  display: grid;
+  height: 42px;
+  place-items: center;
+  width: 42px;
+}
+
 .eyebrow {
   color: #2f6fed;
   font-size: 12px;
@@ -40,6 +63,10 @@
   display: flex;
   gap: 12px;
   padding: 8px 8px 8px 16px;
+}
+
+.user-pill button {
+  gap: 7px;
 }
 
 .nav-tabs {
@@ -64,7 +91,9 @@ button {
 }
 
 .nav-tabs a {
+  gap: 8px;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .nav-tabs a.active,
@@ -629,9 +658,81 @@ textarea {
   color: #ffffff;
   display: inline-flex;
   font-weight: 800;
+  gap: 7px;
   margin-bottom: 6px;
   padding: 9px 12px;
   text-decoration: none;
+}
+
+.loading-skeleton {
+  display: grid;
+  gap: 20px;
+}
+
+.skeleton {
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+  background: #e8edf5;
+  border: 1px solid #dfe5ef;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.skeleton::after {
+  animation: skeleton-sweep 1.6s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  content: '';
+  inset: 0;
+  position: absolute;
+  transform: translateX(-100%);
+}
+
+.skeleton-hero {
+  height: 230px;
+}
+
+.skeleton-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.skeleton-stat {
+  height: 112px;
+}
+
+.skeleton-content-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.skeleton-panel {
+  height: 190px;
+}
+
+.sr-only {
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.72; }
+  50% { opacity: 1; }
+}
+
+@keyframes skeleton-sweep {
+  100% { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .skeleton::after {
+    animation: none;
+  }
 }
 
 .resume-link:hover {
@@ -770,7 +871,9 @@ td span {
   .search-panel,
   .split,
   .auth-layout,
-  .trust-grid {
+  .trust-grid,
+  .skeleton-grid,
+  .skeleton-content-grid {
     grid-template-columns: 1fr;
   }
 

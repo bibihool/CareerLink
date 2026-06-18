@@ -31,6 +31,7 @@ function App() {
   const [adminUsers, setAdminUsers] = useState([])
   const [status, setStatus] = useState(null)
   const [isBusy, setIsBusy] = useState(false)
+  const [isWorkspaceLoading, setIsWorkspaceLoading] = useState(() => Boolean(getStoredSession()))
   const [filters, setFilters] = useState({ keyword: '', location: '', salary: '', type: '' })
   const [jobForm, setJobForm] = useState({ ...emptyJobForm })
   const [editingJobId, setEditingJobId] = useState(null)
@@ -51,7 +52,7 @@ function App() {
 
   useEffect(() => {
     if (user) refreshWorkspace(user)
-    else loadJobs()
+    else loadJobs().catch((error) => showStatus(error.message))
 
     const handleUnauthorized = () => {
       resetUserState()
@@ -80,6 +81,7 @@ function App() {
     setJobForm({ ...emptyJobForm })
     setEditingJobId(null)
     setQuickAdd({ skills: '', education: '', experience: '' })
+    setIsWorkspaceLoading(false)
   }
 
   async function withBusy(action) {
@@ -121,6 +123,7 @@ function App() {
   }
 
   async function refreshWorkspace(currentUser) {
+    setIsWorkspaceLoading(true)
     try {
       await Promise.all([
         loadJobs(),
@@ -131,6 +134,8 @@ function App() {
       ])
     } catch (error) {
       showStatus(error.message)
+    } finally {
+      setIsWorkspaceLoading(false)
     }
   }
 
@@ -379,7 +384,7 @@ function App() {
       <Route path="/forgot-password" element={<ForgotPasswordPage email={verification.email || authForm.email} setEmail={(email) => setVerification({ ...verification, email })} isBusy={isBusy} onSubmit={handleSendPasswordCode} onBack={() => navigate('/login')} {...authStatusProps} />} />
       <Route path="/reset-password" element={<ResetPasswordPage verification={verification} setVerification={setVerification} isBusy={isBusy} onSubmit={handleResetPassword} onBack={() => navigate('/forgot-password')} {...authStatusProps} />} />
 
-      <Route element={user ? <AppLayout user={user} status={status} onDismissStatus={() => setStatus(null)} onLogout={handleLogout} /> : <Navigate replace to="/login" />}>
+      <Route element={user ? <AppLayout user={user} status={status} isLoading={isWorkspaceLoading} onDismissStatus={() => setStatus(null)} onLogout={handleLogout} /> : <Navigate replace to="/login" />}>
         <Route path="/dashboard" element={<DashboardPage user={user} jobs={jobs} applications={trackedApplications} notifications={notifications} profile={profile} company={company} adminUsers={adminUsers} />} />
         <Route path="/profile" element={<RoleRoute user={user} roles={['Job Seeker']}><SeekerProfilePage profile={profile} setProfile={setProfile} quickAdd={quickAdd} setQuickAdd={setQuickAdd} onAddItem={addProfileItem} onSave={saveProfile} onResumeUpload={saveResume} /></RoleRoute>} />
         <Route path="/employer" element={<RoleRoute user={user} roles={['Employer']}><EmployerJobsPage company={company} setCompany={setCompany} jobForm={jobForm} setJobForm={setJobForm} editingJobId={editingJobId} jobs={employerJobs} onSaveCompany={saveCompany} onSubmitJob={submitJob} onEditJob={editJob} onCloseJob={closeJob} onDeleteJob={deleteJob} /></RoleRoute>} />

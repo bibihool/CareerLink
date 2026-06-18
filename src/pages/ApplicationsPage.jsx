@@ -1,5 +1,6 @@
 import EmptyState from '../components/EmptyState'
 import { applicationStatuses } from '../constants'
+import { FileText } from 'lucide-react'
 
 export default function ApplicationsPage({ isEmployer, applications, onStatusChange, onViewResume }) {
   return (
@@ -12,7 +13,7 @@ export default function ApplicationsPage({ isEmployer, applications, onStatusCha
               <tr key={application.id}>
                 <td><strong>{application.applicant}</strong><span>{application.email}</span></td>
                 <td>{application.job?.title || 'Removed job'}</td>
-                <td>{application.resume ? <><button className="resume-link" type="button" onClick={() => onViewResume(application.resume)}>View resume</button><span>{application.resume}</span></> : <span>No resume uploaded</span>}</td>
+                <td>{application.resume ? <button className="resume-link" type="button" onClick={() => onViewResume(application.resume)}><FileText aria-hidden="true" size={17} />View Resume</button> : <span>No resume uploaded</span>}</td>
                 <td><span className="status">{application.status}</span></td>
                 <td>{isEmployer ? <select value={application.status} onChange={(event) => onStatusChange(application.id, event.target.value)}>{applicationStatuses.map((status) => <option key={status}>{status}</option>)}</select> : <span>{application.note}</span>}</td>
               </tr>
