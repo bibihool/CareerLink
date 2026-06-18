@@ -51,7 +51,7 @@
   padding: 12px 40px;
 }
 
-.nav-tabs button,
+.nav-tabs a,
 button {
   background: #ffffff;
   border: 1px solid #cad5e5;
@@ -63,11 +63,26 @@ button {
   padding: 10px 14px;
 }
 
-.nav-tabs button.active,
+.nav-tabs a {
+  text-decoration: none;
+}
+
+.nav-tabs a.active,
+.nav-tabs a:hover,
 button:hover {
   background: #2f6fed;
   border-color: #2f6fed;
   color: #ffffff;
+}
+
+.auth-message {
+  left: 50%;
+  max-width: 720px;
+  position: absolute;
+  top: 18px;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  z-index: 3;
 }
 
 button:disabled {
@@ -677,6 +692,46 @@ td span {
   height: 28px;
   place-items: center;
   width: 28px;
+}
+
+.section-heading {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.section-heading h2 {
+  margin: 0;
+}
+
+.count-badge {
+  background: #eef4ff;
+  border: 1px solid #d8e5ff;
+  border-radius: 999px;
+  color: #2356a5;
+  font-weight: 800;
+  padding: 7px 11px;
+}
+
+.status-success {
+  background: #ecfdf5;
+  border-color: #9be7c1;
+  color: #075e42;
+}
+
+.status-danger {
+  background: #fff1f1;
+  border-color: #f4b8b8;
+  color: #9b2020;
+}
+
+.file-note {
+  color: #526074;
+  font-size: 13px;
+  margin: -4px 0 4px;
+  overflow-wrap: anywhere;
 }
 
 .empty-state {

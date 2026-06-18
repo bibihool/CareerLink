@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const db = require("../config/db");
+const { signToken } = require("../utils/jwt");
 const { query } = require("../utils/schema");
 const { sendOtpEmail } = require("../utils/mailer");
 
@@ -20,6 +21,13 @@ function mapUser(user) {
         name: user.name,
         email: user.email,
         role: toClientRole(user.role),
+    };
+}
+
+function createAuthResponse(user) {
+    return {
+        user: mapUser(user),
+        token: signToken(user),
     };
 }
 
@@ -77,6 +85,10 @@ const registerUser = async (req, res) => {
         });
     }
 
+    if (!["Job Seeker", "Employer"].includes(role)) {
+        return res.status(400).json({ message: "Please choose a valid account role" });
+    }
+
     try {
         const existing = await query(db, "SELECT id FROM users WHERE email = ?", [email]);
         if (existing.length) {
@@ -119,6 +131,10 @@ const verifyRegistration = async (req, res) => {
         }
 
         const payload = JSON.parse(otp.payload || "{}");
+        if (!["Job Seeker", "Employer"].includes(payload.role)) {
+            await query(db, "UPDATE email_otps SET used = 1 WHERE id = ?", [otp.id]);
+            return res.status(400).json({ message: "Invalid account role" });
+        }
         const existing = await query(db, "SELECT id FROM users WHERE email = ?", [email]);
         if (existing.length) {
             return res.status(409).json({ message: "Email is already registered" });
@@ -136,7 +152,7 @@ const verifyRegistration = async (req, res) => {
 
         res.status(201).json({
             message: "Email verified and account created",
-            user: mapUser(rows[0]),
+            ...createAuthResponse(rows[0]),
         });
     } catch (error) {
         console.log(error);
@@ -163,6 +179,10 @@ const loginUser = async (req, res) => {
             });
         }
 
+        if (user.suspended) {
+            return res.status(403).json({ message: "This account is suspended" });
+        }
+
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({
@@ -172,7 +192,7 @@ const loginUser = async (req, res) => {
 
         res.json({
             message: "Login successful",
-            user: mapUser(user),
+            ...createAuthResponse(user),
         });
     } catch {
         res.status(500).json({

@@ -5,6 +5,7 @@ const uploadDir = path.join(__dirname, "..", "uploads");
 
 const columns = {
     users: [
+        ["suspended", "TINYINT(1) DEFAULT 0"],
         ["headline", "VARCHAR(255) NULL"],
         ["location", "VARCHAR(255) NULL"],
         ["resume", "VARCHAR(255) NULL"],
@@ -54,6 +55,48 @@ async function addMissingColumns(db) {
     }
 }
 
+async function createCoreTables(db) {
+    await query(
+        db,
+        `CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL UNIQUE,
+            password VARCHAR(255) NOT NULL,
+            role VARCHAR(50) NOT NULL DEFAULT 'jobseeker',
+            suspended TINYINT(1) DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`,
+    );
+
+    await query(
+        db,
+        `CREATE TABLE IF NOT EXISTS jobs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            location VARCHAR(255) NOT NULL,
+            salary DECIMAL(12, 2) DEFAULT 0,
+            description TEXT NOT NULL,
+            employer_id INT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_jobs_employer (employer_id)
+        )`,
+    );
+
+    await query(
+        db,
+        `CREATE TABLE IF NOT EXISTS applications (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            job_id INT NOT NULL,
+            user_id INT NOT NULL,
+            status VARCHAR(50) DEFAULT 'Submitted',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_job_applicant (job_id, user_id),
+            INDEX idx_applications_user (user_id)
+        )`,
+    );
+}
+
 async function createNotificationsTable(db) {
     await query(
         db,
@@ -87,6 +130,7 @@ async function ensureSchema(db) {
         fs.mkdirSync(uploadDir, { recursive: true });
     }
 
+    await createCoreTables(db);
     await addMissingColumns(db);
     await createNotificationsTable(db);
     await createOtpTable(db);
