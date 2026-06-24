@@ -1,0 +1,157 @@
+<mxfile host="app.diagrams.net" modified="2026-06-24T00:00:00.000Z" agent="Codex" version="24.7.5" type="device">
+  <diagram id="careerlink-context" name="Context Diagram Level 0">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title0" value="CareerLink Context Diagram (Level 0)" style="text;html=1;strokeColor=none;fillColor=none;fontSize=22;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="334" y="28" width="500" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="jobSeeker0" value="Job Seeker" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eef4ff;strokeColor=#2f6fed;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="80" y="220" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="employer0" value="Employer" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff7e6;strokeColor=#f59e0b;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="900" y="160" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="email0" value="Email Service" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#10b981;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="900" y="460" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="careerlink0" value="CareerLink Application" style="ellipse;whiteSpace=wrap;html=1;fillColor=#172033;strokeColor=#172033;fontColor=#ffffff;fontStyle=1;fontSize=17;" vertex="1" parent="1">
+          <mxGeometry x="460" y="240" width="240" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="jsToSystem0" value="Registration details&lt;br&gt;Application data&lt;br&gt;Search queries" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="jobSeeker0" target="careerlink0">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="300" y="240" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="systemToJs0" value="Job listings&lt;br&gt;Application status&lt;br&gt;Notifications" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="careerlink0" target="jobSeeker0">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="310" y="335" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="empToSystem0" value="Job listing data&lt;br&gt;Status updates" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="employer0" target="careerlink0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="systemToEmp0" value="Applicant lists&lt;br&gt;Analytics" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="careerlink0" target="employer0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="systemToEmail0" value="Outbound notification requests" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="careerlink0" target="email0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="careerlink-level1" name="Level 1 DFD">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title1" value="CareerLink Data Flow Diagram (Level 1)" style="text;html=1;strokeColor=none;fillColor=none;fontSize=22;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="450" y="28" width="500" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="jobSeeker1" value="Job Seeker" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eef4ff;strokeColor=#2f6fed;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="60" y="170" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="employer1" value="Employer" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff7e6;strokeColor=#f59e0b;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="170" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="email1" value="Email Service" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#10b981;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="720" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p1" value="1.0&lt;br&gt;User Management" style="ellipse;whiteSpace=wrap;html=1;fillColor=#172033;strokeColor=#172033;fontColor=#ffffff;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="320" y="130" width="190" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="p2" value="2.0&lt;br&gt;Job Listing Management" style="ellipse;whiteSpace=wrap;html=1;fillColor=#172033;strokeColor=#172033;fontColor=#ffffff;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="760" y="130" width="210" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="p3" value="3.0&lt;br&gt;Job Search and Browse" style="ellipse;whiteSpace=wrap;html=1;fillColor=#172033;strokeColor=#172033;fontColor=#ffffff;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="320" y="390" width="210" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="p4" value="4.0&lt;br&gt;Application Processing" style="ellipse;whiteSpace=wrap;html=1;fillColor=#172033;strokeColor=#172033;fontColor=#ffffff;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="760" y="390" width="220" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="p5" value="5.0&lt;br&gt;Notification Engine" style="ellipse;whiteSpace=wrap;html=1;fillColor=#172033;strokeColor=#172033;fontColor=#ffffff;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="760" y="680" width="220" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="usersStore" value="D1 Users / Profiles" style="shape=partialRectangle;whiteSpace=wrap;html=1;right=0;fillColor=#f7f9fc;strokeColor=#526074;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="330" y="270" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jobsStore" value="D2 Job Listings" style="shape=partialRectangle;whiteSpace=wrap;html=1;right=0;fillColor=#f7f9fc;strokeColor=#526074;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="775" y="270" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="appsStore" value="D3 Applications" style="shape=partialRectangle;whiteSpace=wrap;html=1;right=0;fillColor=#f7f9fc;strokeColor=#526074;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="775" y="540" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="notesStore" value="D4 Notifications" style="shape=partialRectangle;whiteSpace=wrap;html=1;right=0;fillColor=#f7f9fc;strokeColor=#526074;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="505" y="720" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jsRegToP1" value="Registration details&lt;br&gt;Login credentials&lt;br&gt;Profile updates" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="jobSeeker1" target="p1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1ToJs" value="Authentication result&lt;br&gt;Profile data" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="p1" target="jobSeeker1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1ToUsers" value="Create / update user profile" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" edge="1" parent="1" source="p1" target="usersStore">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="usersToP1" value="Account and profile records" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" edge="1" parent="1" source="usersStore" target="p1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="empToP2" value="Create / edit / delete job listings" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="employer1" target="p2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p2ToEmp" value="Listing confirmation&lt;br&gt;Job analytics" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="p2" target="employer1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p2ToJobs" value="Saved listings" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" edge="1" parent="1" source="p2" target="jobsStore">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jobsToP2" value="Existing listings" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" edge="1" parent="1" source="jobsStore" target="p2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jsToP3" value="Keyword, location, salary,&lt;br&gt;employment type filters" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="jobSeeker1" target="p3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p3ToJs" value="Filtered job listings" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="p3" target="jobSeeker1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jobsToP3" value="Available listings" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" edge="1" parent="1" source="jobsStore" target="p3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jsToP4" value="Application data&lt;br&gt;Resume reference" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="jobSeeker1" target="p4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p4ToJs" value="Application status" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="p4" target="jobSeeker1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p4ToEmp" value="Applicant lists" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="p4" target="employer1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="empToP4" value="Application status updates" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="employer1" target="p4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p4ToApps" value="Submitted applications&lt;br&gt;Updated statuses" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" edge="1" parent="1" source="p4" target="appsStore">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="appsToP4" value="Application records" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" edge="1" parent="1" source="appsStore" target="p4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p4ToP5" value="Status-change event" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="p4" target="p5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p5ToNotes" value="Notification record" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" edge="1" parent="1" source="p5" target="notesStore">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="notesToP5" value="Pending notification data" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" edge="1" parent="1" source="notesStore" target="p5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p5ToJs" value="In-app notifications" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="p5" target="jobSeeker1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p5ToEmail" value="Outbound email request" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="p5" target="email1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
